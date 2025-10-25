@@ -1,0 +1,17 @@
+.{
+    .hello_world = "<html><body>Hello Zig Web Benchmarks!!!</body></html>",
+    .users = .{
+        .{
+            .id = 1,
+            .name = "Zig Zap",
+        },
+        .{
+            .id = 2,
+            .name = "Zig Zinc",
+        },
+        .{
+            .id = 3,
+            .name = "Zig Httpz",
+        },
+    },
+}

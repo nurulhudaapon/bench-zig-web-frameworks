@@ -1,0 +1,26 @@
+Metric,Value,Unit
+Server Software,,
+Complete requests,10000,requests
+Failed requests,0,requests
+Total transferred,380000,bytes
+HTML transferred,20000,bytes
+Requests per second,2475.55,req/s
+Time per request (mean),40.395,ms
+Time per request (mean, across all),0.404,ms
+Transfer rate,91.87,KB/s
+
+Connection Times (ms),min,mean,median,max
+Connect,0,0,0.4,0
+Processing,0,21,250.7,2
+Waiting,0,21,250.7,1
+
+Percentile,Time (ms)
+50%,2
+66%,2
+75%,3
+80%,3
+90%,3
+95%,4
+98%,6
+99%,204
+100%,4034
