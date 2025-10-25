@@ -236,7 +236,7 @@ benchmark_framework() {
     # Run benchmark with oha
     echo "  → Running benchmark (${REQUESTS} requests, ${CONCURRENCY} concurrent)..."
     TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
-    local json_file="results/${framework}/bench_${TIMESTAMP}.json"
+    local json_file="results/${framework}/bench.json"
     
     # Run oha with JSON output directly to final file
     oha -n "$REQUESTS" -c "$CONCURRENCY" \
