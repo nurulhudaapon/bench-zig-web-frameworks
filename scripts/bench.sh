@@ -72,6 +72,73 @@ EOF
     echo "Machine information saved to: $machine_file"
 }
 
+# Function to generate bar chart
+generate_chart() {
+    local max_rps=0
+    local max_bar_length=50
+    local -a rps_values=()
+    local chart_content=""
+    
+    # First pass: collect all RPS values and find maximum
+    for framework in "${FRAMEWORKS[@]}"; do
+        local latest_file=$(ls -t "results/${framework}"/bench_*.json 2>/dev/null | head -1)
+        
+        if [ -f "$latest_file" ]; then
+            local rps=$(jq -r '.summary.requestsPerSec' "$latest_file")
+            rps_values+=("$rps")
+            
+            # Find maximum RPS for scaling
+            if [ $(awk -v a="$rps" -v b="$max_rps" 'BEGIN {print (a > b)}') -eq 1 ]; then
+                max_rps="$rps"
+            fi
+        else
+            rps_values+=("0")
+        fi
+    done
+    
+    # Generate chart
+    chart_content+="\`\`\`\n"
+    
+    # Second pass: generate bars for each framework
+    local idx=0
+    for framework in "${FRAMEWORKS[@]}"; do
+        local rps="${rps_values[$idx]}"
+        idx=$((idx + 1))
+        
+        if [ "$rps" = "0" ] || [ -z "$rps" ]; then
+            continue
+        fi
+        
+        # Calculate bar length (proportional to max)
+        local bar_length=$(awk -v rps="$rps" -v max="$max_rps" -v maxlen="$max_bar_length" 'BEGIN {printf "%.0f", (rps / max) * maxlen}')
+        
+        # Ensure minimum bar length of 1 for visibility
+        if [ "$bar_length" -lt 1 ]; then
+            bar_length=1
+        fi
+        
+        # Format RPS with thousand separators
+        local formatted_rps=$(printf "%'.0f" "$rps" 2>/dev/null || printf "%.0f" "$rps")
+        
+        # Pad framework name for alignment
+        local padded_name=$(printf "%-8s" "$framework")
+        
+        # Generate bar using Unicode block characters
+        local bar=""
+        for ((i=0; i<bar_length; i++)); do
+            bar+="█"
+        done
+        
+        # Add to chart content
+        chart_content+="${padded_name} │${bar} ${formatted_rps} req/s\n"
+    done
+    
+    chart_content+="\`\`\`\n"
+    
+    # Return the chart content
+    echo -e "$chart_content"
+}
+
 # Function to update README with benchmark results
 update_readme() {
     echo ""
@@ -90,27 +157,14 @@ update_readme() {
     local os_arch=$(jq -r '.os.arch' "$machine_file")
     local mode=$(jq -r '.mode' "$machine_file")
     
-    # Build the table content
-    local table_content="### Results\n\n"
-    table_content+="| Framework | Requests/sec |\n"
-    table_content+="|-----------|-------------:|\n"
+    # Build the results content with bar chart
+    local results_content="### Results\n\n"
     
-    # Collect results from each framework (get the latest file)
-    for framework in "${FRAMEWORKS[@]}"; do
-        local latest_file=$(ls -t "results/${framework}"/bench_*.json 2>/dev/null | head -1)
-        
-        if [ -f "$latest_file" ]; then
-            local rps=$(jq -r '.summary.requestsPerSec' "$latest_file")
-            # Format with thousand separators
-            local formatted_rps=$(printf "%'.2f" "$rps" 2>/dev/null || echo "$rps")
-            table_content+="| ${framework} | ${formatted_rps} |\n"
-        else
-            echo "  ⚠ Warning: No results found for ${framework}"
-        fi
-    done
+    # Generate and add bar chart
+    results_content+="$(generate_chart)"
     
-    # Add machine info in italic
-    table_content+="\n*Machine: ${cpu_model} (${cpu_cores} cores), ${memory}GB RAM, ${os_name} ${os_arch}, Mode: ${mode}*\n"
+    # Add machine info in italic below the chart
+    results_content+="\n*Machine: ${cpu_model} (${cpu_cores} cores), ${memory}GB RAM, ${os_name} ${os_arch}, Mode: ${mode}*\n"
     
     # Find where to insert/replace in README
     # We'll replace everything after "### Results"
@@ -119,13 +173,13 @@ update_readme() {
     # Get content before "### Results" (excluding the "### Results" line itself)
     awk '/^### Results/{exit} {print}' "$readme_file" > "$temp_file"
     
-    # Add the new table
-    echo -e "$table_content" >> "$temp_file"
+    # Add the new results content
+    echo -e "$results_content" >> "$temp_file"
     
     # Replace README
     mv "$temp_file" "$readme_file"
     
-    echo "  ✓ README updated with benchmark results"
+    echo "  ✓ README updated with benchmark results chart"
 }
 
 # Function to benchmark a single framework

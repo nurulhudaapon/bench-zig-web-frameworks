@@ -45,12 +45,11 @@ MODE=docker ./scripts/bench.sh
 
 ### Results
 
-| Framework | Requests/sec |
-|-----------|-------------:|
-| std | 32678.46 |
-| zap | 126461.09 |
-| httpz | 117326.25 |
-| zinc | 26168.90 |
-
+```
+std      │█████████████ 32312 req/s
+zap      │████████████████████████████████████████████████ 118040 req/s
+httpz    │██████████████████████████████████████████████████ 123225 req/s
+zinc     │██████████████ 34892 req/s
+```
 *Machine: Apple M1 Pro (10 cores), 16GB RAM, Darwin arm64, Mode: local*
 
