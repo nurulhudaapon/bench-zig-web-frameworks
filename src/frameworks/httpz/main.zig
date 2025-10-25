@@ -17,7 +17,7 @@ pub fn main() !void {
     var router = try server.router(.{});
 
     router.get("/", root, .{});
-    router.get("/httpz", httpzEndpoint, .{});
+    router.get("/httpz", httpz_endpoint, .{});
     router.get("/api/users", users, .{});
     router.get("/api/users/:id", user, .{});
 
@@ -30,7 +30,7 @@ fn root(_: *httpz.Request, res: *httpz.Response) !void {
     res.body = shared_mod.response.hello_world;
 }
 
-fn httpzEndpoint(_: *httpz.Request, res: *httpz.Response) !void {
+fn httpz_endpoint(_: *httpz.Request, res: *httpz.Response) !void {
     res.status = 200;
     res.body = "OK";
 }

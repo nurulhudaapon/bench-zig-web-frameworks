@@ -2,24 +2,55 @@
 
 This is a benchmark suite for Zig web frameworks.
 
+### Prerequisites
+
+- Docker (for Docker mode)
+- [oha](https://github.com/hatoo/oha) - HTTP load testing tool
+- Zig compiler (for local mode)
+
 ### Running the benchmarks
 
-Build the images for each framework.
+
+
+#### Option 1: Local Mode (default)
+
+Build the binaries locally:
 ```bash
-./scripts/build.sh
+zig build -Doptimize=ReleaseFast -Dcpu=baseline
 ```
 
-Run the benchmarks.
+Run the benchmarks locally (without Docker):
 ```bash
 ./scripts/bench.sh
 ```
 
-### Results
+#### Option 2: Docker Mode
 
-The results are saved in the `results` directory.
+Build the Docker images for each framework:
+```bash
+./scripts/build.sh
+```
+
+Run the benchmarks in Docker containers:
+```bash
+MODE=docker ./scripts/bench.sh
+```
 
 ### Frameworks
 
+- [Zig Standard Library HTTP Server](https://ziglang.org/documentation/master/std/#std.http.Server)
 - [Zap](https://github.com/zigzap/zap)
 - [HTTPz](https://github.com/karlseguin/http.zig)
 - [Zinc](https://github.com/zon-dev/zinc)
+
+### Results
+
+| Framework | Requests/sec |
+|-----------|-------------:|
+| std | 32678.46 |
+| zap | 126461.09 |
+| httpz | 117326.25 |
+| zinc | 26168.90 |
+
+*Machine: Apple M1 Pro (10 cores), 16GB RAM, Darwin arm64, Mode: local*
+

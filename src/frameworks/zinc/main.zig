@@ -5,7 +5,7 @@ const zinc = @import("zinc");
 pub fn main() !void {
     var z = try zinc.init(.{
         .port = shared_mod.port,
-        .num_threads = 4,
+        .num_threads = 2,
         .force_nonblocking = true,
     });
     defer z.deinit();
@@ -13,7 +13,7 @@ pub fn main() !void {
     var router = z.getRouter();
 
     try router.get("/", root);
-    try router.get("/httpz", httpzEndpoint);
+    try router.get("/httpz", httpz_endpoint);
     try router.get("/api/users/:id", user);
     try router.get("/api/users", users);
 
@@ -24,7 +24,7 @@ fn root(ctx: *zinc.Context) anyerror!void {
     try ctx.send(shared_mod.response.hello_world, .{});
 }
 
-fn httpzEndpoint(ctx: *zinc.Context) anyerror!void {
+fn httpz_endpoint(ctx: *zinc.Context) anyerror!void {
     try ctx.send("OK", .{});
 }
 

@@ -1,0 +1,17 @@
+{
+  "hostname": "mac.local",
+  "os": {
+    "name": "Darwin",
+    "version": "25.0.0",
+    "arch": "arm64"
+  },
+  "cpu": {
+    "model": "Apple M1 Pro",
+    "cores": 10
+  },
+  "memory": {
+    "totalGB": 16
+  },
+  "timestamp": "2025-10-25T19:13:52Z",
+  "mode": "local"
+}

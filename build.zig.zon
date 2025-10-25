@@ -37,7 +37,7 @@
             .hash = "zap-0.10.6-GoeB8w-EJABTkxyoGH_Z8oMBYMxTBvn7YWk-DrJOHuDO",
         },
         .zinc = .{
-            .url = "https://github.com/zon-dev/zinc/archive/refs/heads/main.zip",
+            .url = "git+https://github.com/zon-dev/zinc.git#ae47bfb8fdcff09fe826ee5b44010d19a3de8c81",
             .hash = "zinc-0.2.0-alpha.4-uL00zamRAgBxfN0bKClXMIHf24-IGfpK77HdPmy3CrA4",
         },
         .httpz = .{

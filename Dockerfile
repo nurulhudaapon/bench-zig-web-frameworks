@@ -11,6 +11,7 @@ RUN curl https://ziglang.org/download/${ZIG_VER}/zig-$(uname -m)-linux-${ZIG_VER
 # Build the app
 WORKDIR /app
 COPY . .
+# -Dtarget=$(uname -m)-linux-musl # musl target is not supported by zap
 RUN /opt/zig/zig build -Doptimize=ReleaseFast -Dcpu=baseline
 
 

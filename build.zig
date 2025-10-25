@@ -116,10 +116,11 @@ pub fn build(b: *std.Build) void {
     }
 
     // ========================= BENCHARKS =========================
-
-    addBenchFramework(b, "zap", .{ .target = target, .optimize = optimize });
-    // addBenchFramework(b, "zinc", .{ .target = target, .optimize = optimize });
-    addBenchFramework(b, "httpz", .{ .target = target, .optimize = optimize });
+    const shared_opts = .{ .target = target, .optimize = optimize };
+    addBenchFramework(b, "zinc", shared_opts);
+    addBenchFramework(b, "zap", shared_opts);
+    addBenchFramework(b, "httpz", shared_opts);
+    addBenchFramework(b, "std", shared_opts);
 
     // ========================= BENCHARKS =========================
 
@@ -170,7 +171,6 @@ fn addBenchFramework(b: *std.Build, comptime name: []const u8, args: anytype) vo
         .optimize = args.optimize,
     });
 
-    const dep = b.dependency(name, args);
     const exe = b.addExecutable(.{
         .name = "bench_" ++ name,
         .root_module = b.createModule(.{
@@ -178,11 +178,16 @@ fn addBenchFramework(b: *std.Build, comptime name: []const u8, args: anytype) vo
             .target = args.target,
             .optimize = args.optimize,
             .imports = &.{
-                .{ .name = name, .module = dep.module(name) },
                 .{ .name = "shared_mod", .module = shared_mod },
             },
         }),
     });
+
+    if (!std.mem.eql(u8, name, "std")) {
+        const dep = b.dependency(name, args);
+        exe.root_module.addImport(name, dep.module(name));
+    }
+
     b.installArtifact(exe);
     const run_step = b.step("run-" ++ name, "Run the " ++ name ++ " app");
     const run_cmd = b.addRunArtifact(exe);
