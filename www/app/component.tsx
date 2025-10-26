@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { BenchmarkData } from './page';
+import type { BenchmarkData } from './data';
 
 interface BenchmarkClientProps {
   benchmarkData: BenchmarkData[];
