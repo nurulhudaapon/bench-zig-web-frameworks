@@ -12,8 +12,8 @@ FRAMEWORKS=(
 )
 
 # Benchmark settings
-REQUESTS=100000
-CONCURRENCY=10
+REQUESTS=400000
+CONCURRENCY=100
 PORT=8081
 ENDPOINT="/httpz"
 
@@ -29,9 +29,9 @@ MODE=${MODE:-"local"}
 kill_port_process() {
   local port=$1
   echo "  → Checking for processes on port ${port}..."
-  
+
   # Try lsof first (more reliable)
-  if command -v lsof &> /dev/null; then
+  if command -v lsof &>/dev/null; then
     local pids=$(lsof -ti :${port} 2>/dev/null)
     if [ -n "$pids" ]; then
       echo "  → Killing processes on port ${port}: $pids"
@@ -40,7 +40,7 @@ kill_port_process() {
     fi
   else
     # Fallback to fuser if lsof not available
-    if command -v fuser &> /dev/null; then
+    if command -v fuser &>/dev/null; then
       fuser -k ${port}/tcp 2>/dev/null || true
       sleep 1
     fi
@@ -52,7 +52,7 @@ wait_for_port_free() {
   local port=$1
   local max_wait=10
   local waited=0
-  
+
   while [ $waited -lt $max_wait ]; do
     if ! nc -z localhost $port 2>/dev/null && ! lsof -i :$port >/dev/null 2>&1; then
       return 0
@@ -61,7 +61,7 @@ wait_for_port_free() {
     sleep 1
     waited=$((waited + 1))
   done
-  
+
   echo "  ⚠ Warning: Port ${port} still in use after ${max_wait}s"
   return 1
 }
@@ -71,7 +71,7 @@ wait_for_port_ready() {
   local port=$1
   local max_wait=10
   local waited=0
-  
+
   while [ $waited -lt $max_wait ]; do
     if nc -z localhost $port 2>/dev/null; then
       echo "  → Service is ready on port ${port}"
@@ -80,7 +80,7 @@ wait_for_port_ready() {
     sleep 1
     waited=$((waited + 1))
   done
-  
+
   echo "  ✗ Error: Service not ready on port ${port} after ${max_wait}s"
   return 1
 }
@@ -136,58 +136,58 @@ save_machine_info() {
         # Try to identify ARM CPU from implementer and part
         local cpu_part=$(grep "CPU part" /proc/cpuinfo | head -1 | awk '{print $NF}' 2>/dev/null)
         case "$cpu_part" in
-          "0xd03") cpu_info="ARM Cortex-A53" ;;
-          "0xd04") cpu_info="ARM Cortex-A35" ;;
-          "0xd05") cpu_info="ARM Cortex-A55" ;;
-          "0xd07") cpu_info="ARM Cortex-A57" ;;
-          "0xd08") cpu_info="ARM Cortex-A72" ;;
-          "0xd09") cpu_info="ARM Cortex-A73" ;;
-          "0xd0a") cpu_info="ARM Cortex-A75" ;;
-          "0xd0b") cpu_info="ARM Cortex-A76" ;;
-          "0xd0c") cpu_info="ARM Neoverse N1" ;;
-          "0xd0d") cpu_info="ARM Cortex-A77" ;;
-          "0xd0e") cpu_info="ARM Cortex-A76AE" ;;
-          "0xd40") cpu_info="ARM Neoverse V1" ;;
-          "0xd41") cpu_info="ARM Cortex-A78" ;;
-          "0xd44") cpu_info="ARM Cortex-X1" ;;
-          "0xd46") cpu_info="ARM Cortex-A510" ;;
-          "0xd47") cpu_info="ARM Cortex-A710" ;;
-          "0xd48") cpu_info="ARM Cortex-X2" ;;
-          "0xd49") cpu_info="ARM Neoverse N2" ;;
-          "0xd4a") cpu_info="ARM Neoverse E1" ;;
-          "0xd4b") cpu_info="ARM Cortex-A78AE" ;;
-          "0xd4c") cpu_info="ARM Cortex-X1C" ;;
-          "0xd4d") cpu_info="ARM Cortex-A715" ;;
-          "0xd4e") cpu_info="ARM Cortex-X3" ;;
-          *)
-            local cpu_impl=$(grep "CPU implementer" /proc/cpuinfo | head -1 | awk '{print $NF}' 2>/dev/null)
-            if [ -n "$cpu_impl" ] && [ -n "$cpu_part" ]; then
-              cpu_info="ARM CPU (impl: $cpu_impl, part: $cpu_part)"
-            else
-              cpu_info="Unknown CPU"
-            fi
-            ;;
+        "0xd03") cpu_info="ARM Cortex-A53" ;;
+        "0xd04") cpu_info="ARM Cortex-A35" ;;
+        "0xd05") cpu_info="ARM Cortex-A55" ;;
+        "0xd07") cpu_info="ARM Cortex-A57" ;;
+        "0xd08") cpu_info="ARM Cortex-A72" ;;
+        "0xd09") cpu_info="ARM Cortex-A73" ;;
+        "0xd0a") cpu_info="ARM Cortex-A75" ;;
+        "0xd0b") cpu_info="ARM Cortex-A76" ;;
+        "0xd0c") cpu_info="ARM Neoverse N1" ;;
+        "0xd0d") cpu_info="ARM Cortex-A77" ;;
+        "0xd0e") cpu_info="ARM Cortex-A76AE" ;;
+        "0xd40") cpu_info="ARM Neoverse V1" ;;
+        "0xd41") cpu_info="ARM Cortex-A78" ;;
+        "0xd44") cpu_info="ARM Cortex-X1" ;;
+        "0xd46") cpu_info="ARM Cortex-A510" ;;
+        "0xd47") cpu_info="ARM Cortex-A710" ;;
+        "0xd48") cpu_info="ARM Cortex-X2" ;;
+        "0xd49") cpu_info="ARM Neoverse N2" ;;
+        "0xd4a") cpu_info="ARM Neoverse E1" ;;
+        "0xd4b") cpu_info="ARM Cortex-A78AE" ;;
+        "0xd4c") cpu_info="ARM Cortex-X1C" ;;
+        "0xd4d") cpu_info="ARM Cortex-A715" ;;
+        "0xd4e") cpu_info="ARM Cortex-X3" ;;
+        *)
+          local cpu_impl=$(grep "CPU implementer" /proc/cpuinfo | head -1 | awk '{print $NF}' 2>/dev/null)
+          if [ -n "$cpu_impl" ] && [ -n "$cpu_part" ]; then
+            cpu_info="ARM CPU (impl: $cpu_impl, part: $cpu_part)"
+          else
+            cpu_info="Unknown CPU"
+          fi
+          ;;
         esac
       fi
     fi
-    
+
     cpu_cores=$(nproc 2>/dev/null || grep -c ^processor /proc/cpuinfo 2>/dev/null || echo "1")
-    
+
     # Try to get physical cores (x86), fallback to logical cores
     cpu_physical_cores=$(grep "^cpu cores" /proc/cpuinfo | head -1 | cut -d: -f2 | xargs 2>/dev/null)
     if [ -z "$cpu_physical_cores" ] || [ "$cpu_physical_cores" = "0" ]; then
       # ARM or no hyperthreading - use logical cores
       cpu_physical_cores="$cpu_cores"
     fi
-    
+
     total_memory=$(($(grep MemTotal /proc/meminfo | awk '{print $2}' 2>/dev/null || echo 0) / 1024 / 1024))
     available_memory=$(($(grep MemAvailable /proc/meminfo | awk '{print $2}' 2>/dev/null || echo 0) / 1024 / 1024))
-    
+
     # CPU frequency in MHz (convert to Hz for consistency)
     cpu_freq_current=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq 2>/dev/null || echo "0")
     cpu_freq_min=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 2>/dev/null || echo "0")
     cpu_freq_max=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq 2>/dev/null || echo "0")
-    
+
     # Convert kHz to MHz
     if [ "$cpu_freq_current" != "0" ]; then
       cpu_freq_current=$((cpu_freq_current / 1000))
@@ -198,7 +198,7 @@ save_machine_info() {
     if [ "$cpu_freq_max" != "0" ]; then
       cpu_freq_max=$((cpu_freq_max / 1000))
     fi
-    
+
     # CPU cache sizes (in KB)
     # L1: Try /proc/cpuinfo first, then sysfs
     cpu_cache_l1=$(grep "cache size" /proc/cpuinfo | head -1 | awk '{print $4}' 2>/dev/null)
@@ -206,21 +206,21 @@ save_machine_info() {
       cpu_cache_l1=$(cat /sys/devices/system/cpu/cpu0/cache/index0/size 2>/dev/null | sed 's/K//')
     fi
     [ -z "$cpu_cache_l1" ] && cpu_cache_l1="0"
-    
+
     # L2 and L3 from sysfs
     cpu_cache_l2=$(cat /sys/devices/system/cpu/cpu0/cache/index2/size 2>/dev/null | sed 's/K//' || echo "0")
     cpu_cache_l3=$(cat /sys/devices/system/cpu/cpu0/cache/index3/size 2>/dev/null | sed 's/K//' || echo "0")
-    
+
     # CPU flags/features (x86: flags, ARM: Features)
     cpu_flags=$(grep "^flags" /proc/cpuinfo | head -1 | cut -d: -f2 | tr ' ' '\n' | grep -E "(sse|avx|aes|fma)" | head -10 | tr '\n' ',' | sed 's/,$//' 2>/dev/null)
     if [ -z "$cpu_flags" ]; then
       # ARM: try Features
       cpu_flags=$(grep "^Features" /proc/cpuinfo | head -1 | cut -d: -f2 | tr ' ' '\n' | grep -E "(neon|crypto|asimd|aes|sha|crc)" | head -10 | tr '\n' ',' | sed 's/,$//' 2>/dev/null || echo "")
     fi
-    
+
     # CPU governor
     cpu_governor=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo "Unknown")
-    
+
     # Kernel version
     kernel_version=$(uname -v)
   fi
@@ -409,7 +409,7 @@ update_readme() {
 benchmark_framework() {
   local framework=$1
   local server_pid=""
-  
+
   # Extract framework name without version (before colon) for paths
   local framework_name=$(echo "$framework" | cut -d':' -f1)
 
@@ -440,7 +440,7 @@ benchmark_framework() {
     fi
 
     echo "  → Starting local server ($binary)..."
-    "$binary" > /dev/null 2>&1 &
+    "$binary" >/dev/null 2>&1 &
     server_pid=$!
 
     # Wait for service to be ready using port check
@@ -491,23 +491,23 @@ benchmark_framework() {
     if [ -n "$server_pid" ] && kill -0 $server_pid 2>/dev/null; then
       # Try graceful shutdown first
       kill $server_pid 2>/dev/null || true
-      
+
       # Wait up to 5 seconds for graceful shutdown
       local waited=0
       while [ $waited -lt 5 ] && kill -0 $server_pid 2>/dev/null; do
         sleep 1
         waited=$((waited + 1))
       done
-      
+
       # Force kill if still running
       if kill -0 $server_pid 2>/dev/null; then
         echo "  → Force killing server..."
         kill -9 $server_pid 2>/dev/null || true
       fi
-      
+
       wait $server_pid 2>/dev/null || true
     fi
-    
+
     # Ensure port is freed
     kill_port_process "$PORT"
     wait_for_port_free "$PORT"

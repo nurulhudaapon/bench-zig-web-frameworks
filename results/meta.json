@@ -1,5 +1,5 @@
 {
-  "execution_date": "2025-10-26T10:09:55Z",
+  "execution_date": "2025-10-26T11:21:57Z",
   "machine": {
     "hostname": "pi",
     "os": {
@@ -15,7 +15,7 @@
         "physical": 4
       },
       "frequency": {
-        "current_mhz": 2400,
+        "current_mhz": 1500,
         "min_mhz": 1500,
         "max_mhz": 2400
       },

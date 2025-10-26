@@ -66,13 +66,13 @@ The comparison is not strictly apple-to-apple due to architectural differences b
 ### Results
 
 ```
-std      │██████████████████████████████████████ 69,345 req/s
-zap      │██████████████████████████████████████████████████ 91,133 req/s
-httpz    │████████████████████████████████████████████████ 87,531 req/s
-zinc     │█████████████ 23,206 req/s
-zzz      │█████████████████████████████████████████████████ 89,168 req/s
+std      │██████████████████████████████ 72,092 req/s
+zap      │██████████████████████████████████████████████████ 121,333 req/s
+httpz    │██████████████████████████████████████████████████ 120,582 req/s
+zinc     │█████████ 20,837 req/s
+zzz      │██████████████████████████████████████ 92,190 req/s
 ```
 *Machine: Raspberry Pi 5 Model B Rev 1.0 @ 2400MHz (4 cores / 4 physical), L3: 2048KB, 7GB RAM, Linux aarch64, Governor: ondemand, Mode: local*
 
-*Last updated: 2025-10-26T10:09:55Z*
+*Last updated: 2025-10-26T11:21:57Z*
 

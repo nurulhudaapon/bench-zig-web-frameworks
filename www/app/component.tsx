@@ -87,7 +87,7 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
           <div className="flex items-end justify-center gap-8 h-64">
             {benchmarkData.map((item, index) => {
               const heightPercentage = (item.rps / maxRps) * 100;
-              const isPink = index === 0;
+              const isWinner = index === 0;
               const isHovered = hoveredBar === item.name;
 
               return (
@@ -98,14 +98,18 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
                     </div>
                     <div
                       className={`w-full rounded-t-lg transition-all duration-300 relative cursor-pointer ${
-                        isPink ? 'bg-pink-400 hover:bg-pink-300' : 'bg-gray-600 hover:bg-gray-500'
+                        isWinner ? 'hover:opacity-90' : 'bg-gray-600 hover:bg-gray-500'
                       } ${isHovered ? 'opacity-100' : 'opacity-90'}`}
-                      style={{ height: `${heightPercentage}%` }}
+                      style={{ 
+                        height: `${heightPercentage}%`,
+                        backgroundColor: isWinner ? 'rgb(247, 164, 29)' : undefined
+                      }}
                       onMouseEnter={() => setHoveredBar(item.name)}
                       onMouseLeave={() => setHoveredBar(null)}
+                      onClick={() => window.open(item.repoUrl, '_blank', 'noopener,noreferrer')}
                     >
-                      {isPink && (
-                        <div className="absolute top-8 left-1/2 -translate-x-1/2 text-4xl">
+                      {isWinner && (
+                        <div className="absolute top-8 left-1/2 -translate-x-1/2 text-4xl drop-shadow-lg" style={{ filter: 'brightness(0) invert(1)' }}>
                           ⚡
                         </div>
                       )}
@@ -116,7 +120,10 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
                           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-px">
                             <div className="border-8 border-transparent border-b-gray-900"></div>
                           </div>
-                          <div className="font-semibold text-sm mb-2 border-b border-gray-700 pb-2">
+                          <div 
+                            className="font-semibold text-sm mb-2 border-b border-gray-700 pb-2"
+                            style={{ color: index === 0 ? 'rgb(247, 164, 29)' : 'white' }}
+                          >
                             {item.name} v{item.version}
                           </div>
                           <div className="space-y-1">
@@ -162,7 +169,8 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
                       href={item.repoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-white font-medium text-sm hover:text-pink-400 transition-colors cursor-pointer block truncate"
+                      className="text-white font-medium text-sm hover:opacity-80 transition-opacity cursor-pointer block truncate"
+                      style={index === 0 ? { color: 'rgb(247, 164, 29)' } : undefined}
                     >
                       {item.name}
                     </a>
