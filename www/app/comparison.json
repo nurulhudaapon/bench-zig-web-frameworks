@@ -9,7 +9,8 @@
         "httpz": { "value": "Pure Zig", "status": "success" },
         "zap": { "value": "Zig + C", "status": "warning" },
         "std": { "value": "Pure Zig", "status": "success" },
-        "zinc": { "value": "Pure Zig", "status": "success" }
+        "zinc": { "value": "Pure Zig", "status": "success" },
+        "zzz": { "value": "Pure Zig", "status": "success" }
       },
       {
         "name": "External Dependencies",
@@ -17,7 +18,8 @@
         "httpz": { "value": "None", "status": "success" },
         "zap": { "value": "facil.io (C)", "status": "warning" },
         "std": { "value": "None", "status": "success" },
-        "zinc": { "value": "None", "status": "success" }
+        "zinc": { "value": "None", "status": "success" },
+        "zzz": { "value": "tardy (Zig)", "status": "success" }
       },
       {
         "name": "Concurrency Model",
@@ -25,7 +27,8 @@
         "httpz": { "value": "Thread Pool", "status": "success" },
         "zap": { "value": "Multi-threaded", "status": "success" },
         "std": { "value": "Single-threaded", "status": "warning" },
-        "zinc": { "value": "Multi-threaded", "status": "success" }
+        "zinc": { "value": "Multi-threaded", "status": "success" },
+        "zzz": { "value": "Async/Await", "status": "success" }
       },
       {
         "name": "API Level",
@@ -33,7 +36,8 @@
         "httpz": { "value": "High-level", "status": "success" },
         "zap": { "value": "Mid-level", "status": "success" },
         "std": { "value": "Low-level", "status": "warning" },
-        "zinc": { "value": "High-level", "status": "success" }
+        "zinc": { "value": "High-level", "status": "success" },
+        "zzz": { "value": "Mid-level", "status": "success" }
       }
     ]
   },
@@ -47,7 +51,8 @@
         "httpz": { "value": "Yes", "status": "success" },
         "zap": { "value": "Manual", "status": "warning" },
         "std": { "value": "No", "status": "error" },
-        "zinc": { "value": "Yes", "status": "success" }
+        "zinc": { "value": "Yes", "status": "success" },
+        "zzz": { "value": "Yes", "status": "success" }
       },
       {
         "name": "Path Parameters",
@@ -55,7 +60,8 @@
         "httpz": { "value": "Yes", "status": "success" },
         "zap": { "value": "No", "status": "error" },
         "std": { "value": "No", "status": "error" },
-        "zinc": { "value": "Yes", "status": "success" }
+        "zinc": { "value": "Yes", "status": "success" },
+        "zzz": { "value": "Yes", "status": "success" }
       },
       {
         "name": "Query Parameters",
@@ -63,7 +69,8 @@
         "httpz": { "value": "Yes", "status": "success" },
         "zap": { "value": "Yes", "status": "success" },
         "std": { "value": "No", "status": "error" },
-        "zinc": { "value": "Yes", "status": "success" }
+        "zinc": { "value": "Yes", "status": "success" },
+        "zzz": { "value": "Yes", "status": "success" }
       },
       {
         "name": "JSON Helpers",
@@ -71,7 +78,8 @@
         "httpz": { "value": "Yes", "status": "success" },
         "zap": { "value": "Yes", "status": "success" },
         "std": { "value": "No", "status": "error" },
-        "zinc": { "value": "Yes", "status": "success" }
+        "zinc": { "value": "Yes", "status": "success" },
+        "zzz": { "value": "Yes", "status": "success" }
       },
       {
         "name": "Response Helpers",
@@ -79,7 +87,8 @@
         "httpz": { "value": "Yes", "status": "success" },
         "zap": { "value": "Yes", "status": "success" },
         "std": { "value": "Manual", "status": "error" },
-        "zinc": { "value": "Yes", "status": "success" }
+        "zinc": { "value": "Yes", "status": "success" },
+        "zzz": { "value": "Yes", "status": "success" }
       }
     ]
   }

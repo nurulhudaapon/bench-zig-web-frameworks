@@ -10,3 +10,6 @@ const Response = struct {
 
 pub const response: Response = @import("asset/response.zon");
 pub const port = 8081;
+pub const thread_count = 2;
+pub const worker_count = 4;
+pub const connection_count = 4096;

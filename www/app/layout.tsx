@@ -7,8 +7,8 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Zig Web Frameworks Benchmark',
-  description: 'Performance comparison of popular Zig web frameworks including httpz, zap, zinc, and std.http.',
-  keywords: 'zig, web frameworks, benchmark, performance, httpz, zap, std, zinc',
+  description: 'Performance comparison of popular Zig web frameworks including httpz, zap, zinc, zzz, and std.http.',
+  keywords: 'zig, web frameworks, benchmark, performance, httpz, zap, std, zinc, zzz',
   authors: [{ name: 'Nurul Huda (Apon)' }],
   creator: 'Nurul Huda (Apon)',
   publisher: 'Nurul Huda (Apon)',

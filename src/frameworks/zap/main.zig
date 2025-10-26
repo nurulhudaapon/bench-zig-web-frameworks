@@ -17,8 +17,8 @@ pub fn main() !void {
     std.debug.print("Started on port {d}\n", .{shared_mod.port});
 
     zap.start(.{
-        .threads = 2,
-        .workers = 2,
+        .threads = shared_mod.thread_count,
+        .workers = shared_mod.worker_count,
     });
 }
 

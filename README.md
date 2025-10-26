@@ -44,6 +44,7 @@ MODE=docker ./scripts/bench.sh
 - [Zap](https://github.com/zigzap/zap)
 - [HTTPz](https://github.com/karlseguin/http.zig)
 - [Zinc](https://github.com/zon-dev/zinc)
+- [zzz](https://github.com/tardy-org/zzz)
 
 ### Benchmark Methodology
 
@@ -65,10 +66,13 @@ The comparison is not strictly apple-to-apple due to architectural differences b
 ### Results
 
 ```
-std      │█████████████ 27,798 req/s
-zap      │███████████████████████████████████████████████ 100,183 req/s
-httpz    │██████████████████████████████████████████████████ 106,966 req/s
-zinc     │█████████ 18,233 req/s
+std      │██████████████████ 33,167 req/s
+zap      │█████████████████████████████████████████████████ 88,671 req/s
+httpz    │██████████████████████████████████████████████████ 90,777 req/s
+zinc     │████████████ 22,191 req/s
+zzz      │█████████████████████████████████████████████████ 88,725 req/s
 ```
 *Machine: Raspberry Pi 5 Model B Rev 1.0 @ 2400MHz (4 cores / 4 physical), L3: 2048KB, 7GB RAM, Linux aarch64, Governor: ondemand, Mode: local*
+
+*Last updated: 2025-10-26T09:04:36Z*
 

@@ -9,6 +9,8 @@ pub fn main() !void {
     var server = try httpz.Server(void).init(allocator, .{
         .port = shared_mod.port,
         .address = "0.0.0.0",
+        .thread_pool = .{ .count = shared_mod.thread_count },
+        .workers = .{ .count = shared_mod.worker_count, .max_conn = shared_mod.connection_count },
     }, {});
     defer {
         server.stop();

@@ -8,11 +8,12 @@ FRAMEWORKS=(
   "zap"
   "httpz"
   "zinc"
+  "zzz:0.14.0"
 )
 
 # Benchmark settings
-REQUESTS=1000000
-CONCURRENCY=100
+REQUESTS=100000
+CONCURRENCY=10
 PORT=8081
 ENDPOINT="/httpz"
 
@@ -84,9 +85,9 @@ wait_for_port_ready() {
   return 1
 }
 
-# Function to save machine information to results/machine.json
+# Function to save machine information to results/meta.json
 save_machine_info() {
-  local machine_file="results/machine.json"
+  local machine_file="results/meta.json"
   local os_name=$(uname -s)
   local os_version=$(uname -r)
   local arch=$(uname -m)
@@ -224,45 +225,47 @@ save_machine_info() {
     kernel_version=$(uname -v)
   fi
 
-  # Write machine info to file with enhanced details
+  # Write meta info to file with enhanced details
   cat >"$machine_file" <<EOF
 {
-  "hostname": "$hostname",
-  "os": {
-    "name": "$os_name",
-    "version": "$os_version",
-    "arch": "$arch",
-    "kernel": "$kernel_version"
-  },
-  "cpu": {
-    "model": "$cpu_info",
-    "cores": {
-      "logical": $cpu_cores,
-      "physical": $cpu_physical_cores
+  "execution_date": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "machine": {
+    "hostname": "$hostname",
+    "os": {
+      "name": "$os_name",
+      "version": "$os_version",
+      "arch": "$arch",
+      "kernel": "$kernel_version"
     },
-    "frequency": {
-      "current_mhz": $cpu_freq_current,
-      "min_mhz": $cpu_freq_min,
-      "max_mhz": $cpu_freq_max
+    "cpu": {
+      "model": "$cpu_info",
+      "cores": {
+        "logical": $cpu_cores,
+        "physical": $cpu_physical_cores
+      },
+      "frequency": {
+        "current_mhz": $cpu_freq_current,
+        "min_mhz": $cpu_freq_min,
+        "max_mhz": $cpu_freq_max
+      },
+      "cache": {
+        "l1_kb": $cpu_cache_l1,
+        "l2_kb": $cpu_cache_l2,
+        "l3_kb": $cpu_cache_l3
+      },
+      "flags": "$cpu_flags",
+      "governor": "$cpu_governor"
     },
-    "cache": {
-      "l1_kb": $cpu_cache_l1,
-      "l2_kb": $cpu_cache_l2,
-      "l3_kb": $cpu_cache_l3
-    },
-    "flags": "$cpu_flags",
-    "governor": "$cpu_governor"
+    "memory": {
+      "total_gb": $total_memory,
+      "available_gb": $available_memory
+    }
   },
-  "memory": {
-    "total_gb": $total_memory,
-    "available_gb": $available_memory
-  },
-  "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "mode": "$MODE"
 }
 EOF
 
-  echo "Machine information saved to: $machine_file"
+  echo "Meta information saved to: $machine_file"
   echo ""
   echo "System Details:"
   echo "  CPU: $cpu_info"
@@ -271,6 +274,7 @@ EOF
   echo "  Cache: L1=${cpu_cache_l1}KB, L2=${cpu_cache_l2}KB, L3=${cpu_cache_l3}KB"
   echo "  Governor: $cpu_governor"
   echo "  Memory: ${total_memory}GB total, ${available_memory}GB available"
+  echo "  Execution Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
 }
 
 # Function to generate bar chart
@@ -282,7 +286,9 @@ generate_chart() {
 
   # First pass: collect all RPS values and find maximum
   for framework in "${FRAMEWORKS[@]}"; do
-    local latest_file=$(ls -t "results/${framework}"/bench.json 2>/dev/null | head -1)
+    # Extract framework name without version (before colon)
+    local framework_name=$(echo "$framework" | cut -d':' -f1)
+    local latest_file=$(ls -t "results/${framework_name}"/bench.json 2>/dev/null | head -1)
 
     if [ -f "$latest_file" ]; then
       local rps=$(jq -r '.summary.requestsPerSec' "$latest_file")
@@ -321,8 +327,10 @@ generate_chart() {
     # Format RPS with thousand separators
     local formatted_rps=$(printf "%'.0f" "$rps" 2>/dev/null || printf "%.0f" "$rps")
 
+    # Extract framework name without version for display
+    local framework_name=$(echo "$framework" | cut -d':' -f1)
     # Pad framework name for alignment
-    local padded_name=$(printf "%-8s" "$framework")
+    local padded_name=$(printf "%-8s" "$framework_name")
 
     # Generate bar using Unicode block characters
     local bar=""
@@ -348,19 +356,20 @@ update_readme() {
   echo "================================================"
 
   local readme_file="README.md"
-  local machine_file="results/machine.json"
+  local meta_file="results/meta.json"
 
-  # Read machine info
-  local cpu_model=$(jq -r '.cpu.model' "$machine_file")
-  local cpu_cores_logical=$(jq -r '.cpu.cores.logical' "$machine_file")
-  local cpu_cores_physical=$(jq -r '.cpu.cores.physical' "$machine_file")
-  local cpu_freq_max=$(jq -r '.cpu.frequency.max_mhz' "$machine_file")
-  local cpu_cache_l3=$(jq -r '.cpu.cache.l3_kb' "$machine_file")
-  local cpu_governor=$(jq -r '.cpu.governor' "$machine_file")
-  local memory=$(jq -r '.memory.total_gb' "$machine_file")
-  local os_name=$(jq -r '.os.name' "$machine_file")
-  local os_arch=$(jq -r '.os.arch' "$machine_file")
-  local mode=$(jq -r '.mode' "$machine_file")
+  # Read meta info
+  local execution_date=$(jq -r '.execution_date' "$meta_file")
+  local cpu_model=$(jq -r '.machine.cpu.model' "$meta_file")
+  local cpu_cores_logical=$(jq -r '.machine.cpu.cores.logical' "$meta_file")
+  local cpu_cores_physical=$(jq -r '.machine.cpu.cores.physical' "$meta_file")
+  local cpu_freq_max=$(jq -r '.machine.cpu.frequency.max_mhz' "$meta_file")
+  local cpu_cache_l3=$(jq -r '.machine.cpu.cache.l3_kb' "$meta_file")
+  local cpu_governor=$(jq -r '.machine.cpu.governor' "$meta_file")
+  local memory=$(jq -r '.machine.memory.total_gb' "$meta_file")
+  local os_name=$(jq -r '.machine.os.name' "$meta_file")
+  local os_arch=$(jq -r '.machine.os.arch' "$meta_file")
+  local mode=$(jq -r '.mode' "$meta_file")
 
   # Build the results content with bar chart
   local results_content="### Results\n\n"
@@ -378,6 +387,7 @@ update_readme() {
     results_content+=", Governor: ${cpu_governor}"
   fi
   results_content+=", Mode: ${mode}*\n"
+  results_content+="\n*Last updated: ${execution_date}*\n"
 
   # Find where to insert/replace in README
   # We'll replace everything after "### Results"
@@ -399,6 +409,9 @@ update_readme() {
 benchmark_framework() {
   local framework=$1
   local server_pid=""
+  
+  # Extract framework name without version (before colon) for paths
+  local framework_name=$(echo "$framework" | cut -d':' -f1)
 
   echo ""
   echo "================================================"
@@ -411,7 +424,14 @@ benchmark_framework() {
 
   if [ "$MODE" = "local" ]; then
     # Local mode: run binary directly
-    local binary="./zig-out/bin/bench_${framework}"
+    # Check if framework name contains ':' (version-specific project)
+    if [[ "$framework" == *":"* ]]; then
+      # Version-specific framework: use separate project binary location
+      local binary="src/frameworks/${framework_name}/zig-out/bin/bench_${framework_name}"
+    else
+      # Standard framework: use main zig-out directory
+      local binary="./zig-out/bin/bench_${framework_name}"
+    fi
 
     if [ ! -f "$binary" ]; then
       echo "  ✗ Error: Binary not found: $binary"
@@ -435,8 +455,8 @@ benchmark_framework() {
 
   else
     # Docker mode: run container
-    local container_name="bench_${framework}"
-    local image_name="bench_zig/${framework}"
+    local container_name="bench_${framework_name}"
+    local image_name="bench_zig/${framework_name}"
 
     # Clean up any existing container
     docker rm -f "$container_name" 2>/dev/null || true
@@ -453,7 +473,7 @@ benchmark_framework() {
   # Run benchmark with oha
   echo "  → Running benchmark (${REQUESTS} requests, ${CONCURRENCY} concurrent)..."
   TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
-  local json_file="results/${framework}/bench.json"
+  local json_file="results/${framework_name}/bench.json"
 
   # Run oha with JSON output directly to final file
   oha -n "$REQUESTS" -c "$CONCURRENCY" \
@@ -530,7 +550,9 @@ echo ""
 
 # Create result directories for all frameworks
 for framework in "${FRAMEWORKS[@]}"; do
-  mkdir -p "results/${framework}"
+  # Extract framework name without version (before colon)
+  framework_name=$(echo "$framework" | cut -d':' -f1)
+  mkdir -p "results/${framework_name}"
 done
 
 # Run benchmarks for all frameworks
@@ -542,7 +564,7 @@ echo ""
 echo "============================================"
 echo "All benchmarks completed!"
 echo "Results saved in results/ directory"
-echo "Machine info: results/machine.json"
+echo "Meta info: results/meta.json"
 echo "============================================"
 
 # Update README with results

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import type { BenchmarkData } from './data';
-import machineInfo from './../../results/machine.json';
+import metaInfo from './../../results/meta.json';
 import comparisonData from './comparison.json';
+import React from 'react';
 
 interface BenchmarkClientProps {
   benchmarkData: BenchmarkData[];
@@ -13,6 +14,7 @@ interface BenchmarkClientProps {
 export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClientProps) {
   const [isStarsLoading, setIsStarsLoading] = useState<boolean>(true);
   const [hoveredBar, setHoveredBar] = useState<string | null>(null);
+  const [showMachineInfo, setShowMachineInfo] = useState<boolean>(false);
 
   // Preload GitHub stars image
   useEffect(() => {
@@ -21,6 +23,24 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
       'https://img.shields.io/github/stars/nurulhudaapon/bench-zig-web-frameworks?style=social&cacheSeconds=60';
     img.onload = () => setIsStarsLoading(false);
   }, []);
+
+  // Close machine info when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showMachineInfo && !target.closest('.machine-info-container')) {
+        setShowMachineInfo(false);
+      }
+    };
+
+    if (showMachineInfo) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showMachineInfo]);
 
   return (
     <div className="min-h-screen flex flex-col md:p-2 bg-gray-50 dark:bg-gray-900">
@@ -137,16 +157,16 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
                       )}
                     </div>
                   </div>
-                  <div className="mt-3 text-center">
+                  <div className="mt-3 text-center w-full">
                     <a
                       href={item.repoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-white font-medium text-sm hover:text-pink-400 transition-colors cursor-pointer"
+                      className="text-white font-medium text-sm hover:text-pink-400 transition-colors cursor-pointer block truncate"
                     >
                       {item.name}
                     </a>
-                    <div className="text-gray-400 text-xs">v{item.version}</div>
+                    <div className="text-gray-400 text-xs truncate max-w-[50px] mx-auto">v{item.version}</div>
                   </div>
                 </div>
               );
@@ -155,11 +175,151 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
         </div>
 
         {/* Machine Info */}
-        <div className="mt-6 text-center text-sm text-gray-400 italic">
-          <p>
-            * Results based on: {machineInfo.cpu.model} ({machineInfo.cpu.cores.logical} cores),{' '}
-            {machineInfo.memory.total_gb}GB RAM, {machineInfo.os.name} {machineInfo.os.arch}, Mode: {machineInfo.mode}
-          </p>
+        <div className="mt-6 flex justify-center">
+          <div className="group relative inline-block machine-info-container">
+            <div 
+              className="text-center text-xs text-gray-500 hover:text-gray-400 transition-colors cursor-help px-4 py-2 rounded-lg hover:bg-gray-700/30"
+              onClick={() => setShowMachineInfo(!showMachineInfo)}
+            >
+              <div className="flex items-center gap-2 justify-center">
+                <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>
+                  {metaInfo.machine.cpu.model} • {metaInfo.execution_date.split('T')[0]}
+                </span>
+              </div>
+            </div>
+            
+            {/* Extended Details Tooltip */}
+            <div className={`${showMachineInfo ? 'visible opacity-100' : 'invisible opacity-0 md:invisible md:opacity-0'} md:group-hover:visible md:group-hover:opacity-100 transition-all duration-300 absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[calc(100vw-2rem)] max-w-96 bg-gray-900 text-white text-xs rounded-lg shadow-2xl p-4 z-20 md:pointer-events-none border border-gray-700`}>
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-px">
+                <div className="border-[6px] border-transparent border-b-gray-700"></div>
+              </div>
+              
+              {/* Header */}
+              <div className="font-semibold text-sm mb-3 pb-2 border-b border-gray-700 text-pink-400">
+                Benchmark Environment
+              </div>
+              
+              <div className="space-y-3">
+                {/* Benchmark Configuration */}
+                <div>
+                  <div className="text-gray-400 font-medium mb-1.5 text-[10px] uppercase tracking-wider">
+                    Benchmark Configuration
+                  </div>
+                  <div className="grid grid-cols-3 gap-x-3 gap-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Threads:</span>
+                      <span className="text-gray-300 font-mono">2</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Workers:</span>
+                      <span className="text-gray-300 font-mono">4</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Max Conn:</span>
+                      <span className="text-gray-300 font-mono">4096</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Execution Info */}
+                <div>
+                  <div className="text-gray-400 font-medium mb-1.5 text-[10px] uppercase tracking-wider">
+                    Execution
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Date:</span>
+                      <span className="text-gray-300 font-mono">{metaInfo.execution_date.split('T')[0]}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Time:</span>
+                      <span className="text-gray-300 font-mono">{metaInfo.execution_date.split('T')[1].replace('Z', '')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Mode:</span>
+                      <span className="text-gray-300 capitalize">{metaInfo.mode}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Host:</span>
+                      <span className="text-gray-300">{metaInfo.machine.hostname}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CPU Info */}
+                <div>
+                  <div className="text-gray-400 font-medium mb-1.5 text-[10px] uppercase tracking-wider">
+                    CPU
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Model:</span>
+                      <span className="text-gray-300 text-right">{metaInfo.machine.cpu.model}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Cores:</span>
+                        <span className="text-gray-300">{metaInfo.machine.cpu.cores.logical} logical</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500"></span>
+                        <span className="text-gray-300">{metaInfo.machine.cpu.cores.physical} physical</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Frequency:</span>
+                      <span className="text-gray-300">{metaInfo.machine.cpu.frequency.current_mhz} MHz (max: {metaInfo.machine.cpu.frequency.max_mhz} MHz)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Cache:</span>
+                      <span className="text-gray-300">L1: {metaInfo.machine.cpu.cache.l1_kb}KB, L2: {metaInfo.machine.cpu.cache.l2_kb}KB, L3: {metaInfo.machine.cpu.cache.l3_kb}KB</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Governor:</span>
+                      <span className="text-gray-300 capitalize">{metaInfo.machine.cpu.governor}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Memory Info */}
+                <div>
+                  <div className="text-gray-400 font-medium mb-1.5 text-[10px] uppercase tracking-wider">
+                    Memory
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Total:</span>
+                      <span className="text-gray-300">{metaInfo.machine.memory.total_gb} GB</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Available:</span>
+                      <span className="text-gray-300">{metaInfo.machine.memory.available_gb} GB</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* OS Info */}
+                <div>
+                  <div className="text-gray-400 font-medium mb-1.5 text-[10px] uppercase tracking-wider">
+                    Operating System
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">OS:</span>
+                      <span className="text-gray-300">{metaInfo.machine.os.name} {metaInfo.machine.os.arch}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Kernel:</span>
+                      <span className="text-gray-300 text-right">{metaInfo.machine.os.version}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -187,7 +347,7 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
             </thead>
             <tbody>
               {comparisonData.map((category, catIdx) => (
-                <>
+                <React.Fragment key={`cat-${catIdx}`}>
                   {/* Category Header Row */}
                   <tr key={`cat-${catIdx}`} className="bg-gray-700/50">
                     <td
@@ -235,7 +395,7 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
                       })}
                     </tr>
                   ))}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>

@@ -5,7 +5,7 @@ const zinc = @import("zinc");
 pub fn main() !void {
     var z = try zinc.init(.{
         .port = shared_mod.port,
-        .num_threads = 2,
+        .num_threads = shared_mod.thread_count,
         .force_nonblocking = true,
     });
     defer z.deinit();

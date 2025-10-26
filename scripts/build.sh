@@ -12,4 +12,7 @@ if [ "$MODE" = "docker" ]; then
 else
     echo "Building in local mode..."
     zig build -Doptimize=ReleaseFast -Dcpu=baseline
+    cd src/frameworks/zzz
+    zig build -Doptimize=ReleaseFast -Dcpu=baseline
+    cd ../..
 fi

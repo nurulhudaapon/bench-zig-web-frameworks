@@ -1,10 +1,13 @@
 import { ZON } from 'zzon';
 
-// Import benchmark results
-import httpzResult from '../../results/httpz/bench.json';
-import zapResult from '../../results/zap/bench.json';
-import stdResult from '../../results/std/bench.json';
-import zincResult from '../../results/zinc/bench.json';
+// Framework definitions
+const frameworks = [
+  'httpz',
+  'zap',
+  'std',
+  'zinc',
+  'zzz:0.14.0', // Has its own build.zig.zon inside the app
+];
 
 // Type definitions
 interface BuildManifest {
@@ -78,12 +81,7 @@ function createBenchmarkEntry(
 
 export async function getBenchmarkData(): Promise<BenchmarkData[]> {
   // Fetch and parse build manifest
-  const response = await fetch(
-    'https://raw.githubusercontent.com/nurulhudaapon/bench-zig-web-frameworks/refs/heads/main/build.zig.zon',
-    { cache: 'force-cache' } // Cache for 1 hour
-  );
-  const zonText = await response.text();
-  const buildManifest = ZON.parse(zonText) as BuildManifest;
+  const buildManifest = ZON.parse((await import('../../build.zig.zon')).default) as BuildManifest;
 
   // Extract versions and repository URLs
   const versions: Record<string, string> = {};
@@ -98,12 +96,34 @@ export async function getBenchmarkData(): Promise<BenchmarkData[]> {
   versions.std = buildManifest.minimum_zig_version;
   repoUrls.std = 'https://github.com/ziglang/zig';
 
-  // Create benchmark data array
- const benchmarkData: BenchmarkData[] = [
-    createBenchmarkEntry('httpz', httpzResult as BenchmarkResult, versions.httpz, repoUrls.httpz),
-    createBenchmarkEntry('zap', zapResult as BenchmarkResult, versions.zap, repoUrls.zap),
-    createBenchmarkEntry('std', stdResult as BenchmarkResult, versions.std, repoUrls.std),
-    createBenchmarkEntry('zinc', zincResult as BenchmarkResult, versions.zinc, repoUrls.zinc),
-  ].sort((a, b) => b.rps - a.rps);
-  return benchmarkData;
+  // Process each framework dynamically
+  const benchmarkData: BenchmarkData[] = [];
+
+  for (const framework of frameworks) {
+    // Check if framework has special notation (e.g., "zzz:0.14.0")
+    const [frameworkName, separateBuildVersion] = framework.split(':');
+
+    // Handle frameworks with separate build.zig.zon
+    if (separateBuildVersion) {
+      const frameworkManifest = ZON.parse(
+        (await import(`../../src/frameworks/${frameworkName}/build.zig.zon`)).default
+      ) as BuildManifest;
+
+      if (frameworkManifest.dependencies[frameworkName]) {
+        versions[frameworkName] = extractVersion(frameworkManifest.dependencies[frameworkName].hash);
+        repoUrls[frameworkName] = extractRepoUrl(frameworkManifest.dependencies[frameworkName].url);
+      }
+    }
+
+    // Dynamically import the benchmark result
+    const result = (await import(`../../results/${frameworkName}/bench.json`)).default as BenchmarkResult;
+
+    // Create benchmark entry
+    benchmarkData.push(
+      createBenchmarkEntry(frameworkName, result, versions[frameworkName], repoUrls[frameworkName])
+    );
+  }
+
+  // Sort by requests per second (descending)
+  return benchmarkData.sort((a, b) => b.rps - a.rps);
 }
