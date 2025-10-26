@@ -46,10 +46,10 @@ MODE=docker ./scripts/bench.sh
 ### Results
 
 ```
-std      │█████████████ 32312 req/s
-zap      │████████████████████████████████████████████████ 118040 req/s
-httpz    │██████████████████████████████████████████████████ 123225 req/s
-zinc     │██████████████ 34892 req/s
+std      │█████████████ 27,798 req/s
+zap      │███████████████████████████████████████████████ 100,183 req/s
+httpz    │██████████████████████████████████████████████████ 106,966 req/s
+zinc     │█████████ 18,233 req/s
 ```
-*Machine: Apple M1 Pro (10 cores), 16GB RAM, Darwin arm64, Mode: local*
+*Machine: Raspberry Pi 5 Model B Rev 1.0 @ 2400MHz (4 cores / 4 physical), L3: 2048KB, 7GB RAM, Linux aarch64, Governor: ondemand, Mode: local*
 

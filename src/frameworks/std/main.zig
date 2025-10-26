@@ -4,24 +4,31 @@ const shared_mod = @import("shared_mod");
 pub fn main() !void {
     const address = try std.net.Address.parseIp4("0.0.0.0", shared_mod.port);
 
-    var server = try address.listen(std.net.Address.ListenOptions{});
+    var server = try address.listen(.{
+        .reuse_address = true,
+    });
     defer server.deinit();
 
     std.debug.print("Started on port {d}\n", .{shared_mod.port});
+
     while (true) {
-        try handleConnection(try server.accept());
+        const connection = try server.accept();
+        handleConnection(connection) catch |err| {
+            std.debug.print("Error handling connection: {}\n", .{err});
+        };
     }
 }
 
 fn handleConnection(connection: std.net.Server.Connection) !void {
     defer connection.stream.close();
 
-    var recv_buffer: [4000]u8 = undefined;
-    var send_buffer: [4000]u8 = undefined;
-    var conn_reader = connection.stream.reader(&recv_buffer);
-    var conn_writer = connection.stream.writer(&send_buffer);
+    var buffer: [4096]u8 = undefined;
 
-    var server = std.http.Server.init(conn_reader.interface(), &conn_writer.interface);
-    var req = try server.receiveHead();
-    try req.respond("OK", std.http.Server.Request.RespondOptions{});
+    // Read the HTTP request
+    const bytes_read = try connection.stream.read(&buffer);
+    if (bytes_read == 0) return;
+
+    // Simple HTTP response
+    const response = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK";
+    _ = try connection.stream.writeAll(response);
 }
