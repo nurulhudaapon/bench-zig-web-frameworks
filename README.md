@@ -2,6 +2,8 @@
 
 This is a benchmark suite for Zig web frameworks.
 
+**🌐 View Live Results:** [https://zigweb.nuhu.dev/](https://zigweb.nuhu.dev/)
+
 ### Prerequisites
 
 - Docker (for Docker mode)
@@ -16,7 +18,7 @@ This is a benchmark suite for Zig web frameworks.
 
 Build the binaries locally:
 ```bash
-zig build -Doptimize=ReleaseFast -Dcpu=baseline
+./scripts/build.sh
 ```
 
 Run the benchmarks locally (without Docker):
@@ -28,7 +30,7 @@ Run the benchmarks locally (without Docker):
 
 Build the Docker images for each framework:
 ```bash
-./scripts/build.sh
+MODE=docker ./scripts/build.sh
 ```
 
 Run the benchmarks in Docker containers:
@@ -42,6 +44,23 @@ MODE=docker ./scripts/bench.sh
 - [Zap](https://github.com/zigzap/zap)
 - [HTTPz](https://github.com/karlseguin/http.zig)
 - [Zinc](https://github.com/zon-dev/zinc)
+
+### Benchmark Methodology
+
+The benchmarks measure raw HTTP performance by sending 1,000,000 requests with 100 concurrent connections to a simple `/httpz` endpoint that returns "OK". This provides a baseline comparison of each framework's request handling capability.
+
+**Current Test:**
+- Simple text response endpoint (`/httpz` → "OK")
+
+**Planned Tests:**
+- JSON serialization/deserialization
+- Route parameter parsing
+- Query parameter handling
+- Static file serving
+- Template rendering
+
+**Note on Comparisons:**
+The comparison is not strictly apple-to-apple due to architectural differences between frameworks (e.g., pure Zig vs C bindings, threading models). However, the goal is to keep the tests as fair as possible by using idiomatic patterns for each framework and testing within their intended use cases.
 
 ### Results
 

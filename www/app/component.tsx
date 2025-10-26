@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import type { BenchmarkData } from './data';
+import machineInfo from './../../results/machine.json';
+import comparisonData from './comparison.json';
 
 interface BenchmarkClientProps {
   benchmarkData: BenchmarkData[];
@@ -57,7 +59,7 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
       </div>
 
       {/* Benchmark Chart */}
-      <div className="bg-gray-800 md:rounded-b-lg p-6 mb-2">
+      <div className="bg-gray-800 md:rounded-b-lg p-6 mb-0 md:mb-2">
         <h2 className="text-white text-center text-lg font-semibold mb-6">
           HTTP requests per second
         </h2>
@@ -151,161 +153,129 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
             })}
           </div>
         </div>
-      </div>
-
-      {/* Information Section */}
-      <div className="bg-white dark:bg-gray-800 md:rounded-lg p-6 mb-2">
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Frameworks */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span className="text-xl">🚀</span>
-              Frameworks
-            </h3>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="https://ziglang.org/documentation/master/std/#std.http.Server"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  Zig Standard Library HTTP Server
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/zigzap/zap"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  Zap
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/karlseguin/http.zig"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  HTTPz
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/zon-dev/zinc"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  Zinc
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Prerequisites */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span className="text-xl">📋</span>
-              Prerequisites
-            </h3>
-            <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-              <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">✓</span>
-                <span>Docker (for Docker mode)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">✓</span>
-                <span>
-                  <a
-                    href="https://github.com/hatoo/oha"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    oha
-                  </a>
-                  {' - HTTP load testing tool'}
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">✓</span>
-                <span>Zig compiler (for local mode)</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Running Benchmarks */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="text-xl">⚙️</span>
-            Running the Benchmarks
-          </h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Local Mode */}
-            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
-                Option 1: Local Mode
-              </h4>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 mb-2">
-                    Build the binaries:
-                  </p>
-                  <code className="block bg-gray-800 text-gray-100 p-2 rounded text-xs overflow-x-auto">
-                    zig build -Doptimize=ReleaseFast -Dcpu=baseline
-                  </code>
-                </div>
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 mb-2">
-                    Run benchmarks:
-                  </p>
-                  <code className="block bg-gray-800 text-gray-100 p-2 rounded text-xs overflow-x-auto">
-                    ./scripts/bench.sh
-                  </code>
-                </div>
-              </div>
-            </div>
-
-            {/* Docker Mode */}
-            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
-                Option 2: Docker Mode
-              </h4>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 mb-2">
-                    Build Docker images:
-                  </p>
-                  <code className="block bg-gray-800 text-gray-100 p-2 rounded text-xs overflow-x-auto">
-                    ./scripts/build.sh
-                  </code>
-                </div>
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 mb-2">
-                    Run benchmarks:
-                  </p>
-                  <code className="block bg-gray-800 text-gray-100 p-2 rounded text-xs overflow-x-auto">
-                    MODE=docker ./scripts/bench.sh
-                  </code>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Machine Info */}
-        <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400 italic">
-          <p>* Results based on: Apple M1 Pro (10 cores), 16GB RAM, Darwin arm64, Mode: local</p>
+        <div className="mt-6 text-center text-sm text-gray-400 italic">
+          <p>
+            * Results based on: {machineInfo.cpu.model} ({machineInfo.cpu.cores.logical} cores),{' '}
+            {machineInfo.memory.total_gb}GB RAM, {machineInfo.os.name} {machineInfo.os.arch}, Mode: {machineInfo.mode}
+          </p>
+        </div>
+      </div>
+
+
+      {/* Comparison Table */}
+      <div className="bg-gray-800 md:rounded-lg mb-0 md:mb-2">
+        <div className="overflow-x-auto md:rounded-lg">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-700">
+                <th className="text-left p-2 md:p-4 font-semibold text-white border-b-2 border-gray-600 text-sm md:text-base">
+                  Feature
+                </th>
+                {benchmarkData.map((fw) => (
+                  <th
+                    key={fw.name}
+                    className="text-center p-2 md:p-4 font-semibold text-white border-b-2 border-gray-600 min-w-[80px] md:min-w-[120px] text-sm md:text-base"
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <span>{fw.name}</span>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {comparisonData.map((category, catIdx) => (
+                <>
+                  {/* Category Header Row */}
+                  <tr key={`cat-${catIdx}`} className="bg-gray-700/50">
+                    <td
+                      colSpan={benchmarkData.length + 1}
+                      className="p-2 md:p-4 border-t-2 border-gray-600"
+                    >
+                      <div className="flex flex-col">
+                        <h3 className="text-base md:text-lg font-bold text-white">
+                          {category.category}
+                        </h3>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {category.description}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                  {/* Feature Rows */}
+                  {category.features.map((feature, fIdx) => (
+                    <tr
+                      key={`${catIdx}-${fIdx}`}
+                      className="border-b border-gray-700 hover:bg-gray-700/30 transition-colors"
+                    >
+                      <td className="p-2 md:p-4">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-white text-xs md:text-sm">
+                            {feature.name}
+                          </span>
+                          <span className="text-xs text-gray-400 hidden md:block">
+                            {feature.description}
+                          </span>
+                        </div>
+                      </td>
+                      {benchmarkData.map((fw) => {
+                        const data = feature[fw.name as keyof typeof feature] as { value: string; status: string };
+                        return (
+                          <td key={fw.name} className="p-2 md:p-4 text-center">
+                            <div className="flex flex-col items-center gap-1 md:gap-2">
+                              <StatusIcon status={data.status} />
+                              <span className="text-xs md:text-sm text-gray-300">
+                                {data.value}
+                              </span>
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   );
 }
+
+// Status Icon Component
+const StatusIcon = ({ status }: { status: string }) => {
+  if (status === 'success') {
+    return (
+      <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-green-500 flex items-center justify-center">
+        <svg className="w-3 h-3 md:w-4 md:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+    );
+  }
+  if (status === 'warning') {
+    return (
+      <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-yellow-500 flex items-center justify-center">
+        <svg className="w-3 h-3 md:w-4 md:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+    );
+  }
+  if (status === 'error') {
+    return (
+      <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-red-500 flex items-center justify-center">
+        <svg className="w-3 h-3 md:w-4 md:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </div>
+    );
+  }
+  return null;
+};
 
 // SVG Components
 const ZigLogo = () => (
