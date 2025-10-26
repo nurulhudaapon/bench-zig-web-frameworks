@@ -13,8 +13,10 @@ interface BenchmarkClientProps {
 
 export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClientProps) {
   const [isStarsLoading, setIsStarsLoading] = useState<boolean>(true);
-  const [hoveredBar, setHoveredBar] = useState<string | null>(null);
-  const [showMachineInfo, setShowMachineInfo] = useState<boolean>(false);
+  const [isChartHovered, setIsChartHovered] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const chartRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Preload GitHub stars image
   useEffect(() => {
@@ -24,62 +26,200 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
     img.onload = () => setIsStarsLoading(false);
   }, []);
 
-  // Close machine info when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (showMachineInfo && !target.closest('.machine-info-container')) {
-        setShowMachineInfo(false);
+
+  // Function to save chart as PNG
+  const handleSaveChart = async () => {
+    if (!containerRef.current || isSaving) return;
+    
+    setIsSaving(true);
+    
+    // Small delay to show the loading overlay
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    try {
+      const { toPng } = await import('html-to-image');
+      
+      // Get the container element (includes header and chart)
+      const element = containerRef.current;
+      
+      // Store original styles
+      const originalOverflow = element.style.overflow;
+      const originalWidth = element.style.width;
+      
+      // Temporarily set overflow-hidden for clean edges and fixed optimal width
+      element.style.overflow = 'hidden';
+      element.style.width = '800px'; // Fixed optimal width for export
+      
+      // Hide the save button before capturing
+      const saveButton = element.querySelector('button');
+      const originalDisplay = saveButton ? (saveButton as HTMLElement).style.display : '';
+      if (saveButton) {
+        (saveButton as HTMLElement).style.display = 'none';
       }
-    };
-
-    if (showMachineInfo) {
-      document.addEventListener('click', handleClickOutside);
+      
+      // Hide GitHub-related elements and show website URL
+      const githubElements = element.querySelectorAll('.github-info');
+      const websiteUrl = element.querySelector('.website-url');
+      
+      githubElements.forEach((el) => {
+        (el as HTMLElement).style.display = 'none';
+      });
+      
+      if (websiteUrl) {
+        (websiteUrl as HTMLElement).style.display = 'flex';
+      }
+      
+      // Small delay to ensure changes are rendered with new width
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Use offsetWidth/offsetHeight to get the actual element dimensions
+      const width = element.offsetWidth;
+      const height = element.offsetHeight;
+      
+      // Generate PNG with high quality and transparency
+      // The overlay stays visible but won't be captured due to filter
+      const dataUrl = await toPng(element, {
+        cacheBust: true,
+        pixelRatio: 2, // Higher quality (2x resolution)
+        backgroundColor: null, // Transparent background
+        width: width + 32, // Add padding width (16px on each side)
+        height: height + 32, // Add padding height (16px on each side)
+        style: {
+          padding: '16px', // Transparent border/padding around the image
+          overflow: 'visible', // Ensure nothing is clipped
+          width: `${width}px`,
+          height: `${height}px`,
+        },
+        filter: (node) => {
+          // Exclude the loading overlay from capture
+          const element = node as HTMLElement;
+          return !element.classList?.contains('export-loading-overlay');
+        },
+      });
+      
+      // Restore original styles
+      element.style.overflow = originalOverflow;
+      element.style.width = originalWidth;
+      
+      // Restore GitHub elements and hide website URL
+      githubElements.forEach((el) => {
+        (el as HTMLElement).style.display = '';
+      });
+      
+      if (websiteUrl) {
+        (websiteUrl as HTMLElement).style.display = 'none';
+      }
+      
+      // Restore the save button
+      if (saveButton) {
+        (saveButton as HTMLElement).style.display = originalDisplay;
+      }
+      
+      // Download the image
+      const link = document.createElement('a');
+      link.download = `zig-web-frameworks-benchmark-${new Date().toISOString().split('T')[0]}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      // Hide the loading overlay after everything is complete
+      setIsSaving(false);
+    } catch (error) {
+      console.error('Failed to save chart:', error);
+      setIsSaving(false);
     }
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [showMachineInfo]);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col md:p-2 bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="flex justify-between items-center px-4 py-2 bg-gray-700 md:rounded-t-lg m-0">
-        <label className="text-white font-semibold flex items-center gap-2">
-          <ZigLogo />
-          Zig Web Frameworks
-        </label>
-        <div className="flex items-center gap-2">
-          <a
-            href="https://github.com/nurulhudaapon/bench-zig-web-frameworks"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white hover:text-gray-300 transition"
-          >
-            <GitHubIcon />
-          </a>
-          <a
-            href="https://github.com/nurulhudaapon/bench-zig-web-frameworks"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:opacity-80 transition"
-          >
-            {isStarsLoading ? (
-              <div className="h-5 w-18 bg-gray-600 animate-pulse rounded" />
-            ) : (
-              <img
-                src="https://img.shields.io/github/stars/nurulhudaapon/bench-zig-web-frameworks?style=social&cacheSeconds=60"
-                alt="GitHub stars"
-                className="h-5 w-18"
-              />
-            )}
-          </a>
+    <div className="min-h-screen flex flex-col md:p-2 bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+      {/* Container for export (includes header and chart) */}
+      <div ref={containerRef} className="relative md:rounded-lg z-10 w-full" style={{ overflow: 'visible' }}>
+        {/* Loading overlay during save - fixed to viewport */}
+        {isSaving && (
+          <div className="export-loading-overlay fixed inset-0 bg-gray-900 z-[200] flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <svg className="animate-spin h-12 w-12 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-white font-medium text-sm">Generating image...</span>
+            </div>
+          </div>
+        )}
+        {/* Header */}
+        <div className="flex justify-between items-center px-4 py-2 bg-gray-700 md:rounded-t-lg m-0">
+          <label className="text-white font-semibold flex items-center gap-2">
+            <ZigLogo />
+            Zig Web Frameworks
+          </label>
+          <div className="flex items-center gap-2">
+            {/* GitHub info - visible by default, hidden in PNG */}
+            <a
+              href="https://github.com/nurulhudaapon/bench-zig-web-frameworks"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:text-gray-300 transition github-info"
+            >
+              <GitHubIcon />
+            </a>
+            <a
+              href="https://github.com/nurulhudaapon/bench-zig-web-frameworks"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition github-info"
+            >
+              {isStarsLoading ? (
+                <div className="h-5 w-18 bg-gray-600 animate-pulse rounded" />
+              ) : (
+                <img
+                  src="https://img.shields.io/github/stars/nurulhudaapon/bench-zig-web-frameworks?style=social&cacheSeconds=60"
+                  alt="GitHub stars"
+                  className="h-5 w-18"
+                />
+              )}
+            </a>
+            {/* Website URL - hidden by default, shown in PNG */}
+            <div className="website-url hidden text-white font-medium text-sm items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              </svg>
+              <span>zigweb.nuhu.dev</span>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Benchmark Chart */}
-      <div className="bg-gray-800 md:rounded-b-lg p-6 mb-0 md:mb-2">
+        {/* Benchmark Chart */}
+        <div 
+          ref={chartRef}
+          className="bg-gray-800 md:rounded-b-lg p-6 mb-0 relative border-2 border-gray-700 overflow-visible"
+          onMouseEnter={() => setIsChartHovered(true)}
+          onMouseLeave={() => setIsChartHovered(false)}
+        >
+        {/* Save Button */}
+        <button
+          onClick={handleSaveChart}
+          disabled={isSaving}
+          className={`absolute top-4 right-4 z-30 flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg shadow-lg transition-all duration-300 ${
+            isChartHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+          } ${isSaving ? 'cursor-wait' : 'cursor-pointer'}`}
+        >
+          {isSaving ? (
+            <>
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-sm font-medium">Saving...</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span className="text-sm font-medium">Save as PNG</span>
+            </>
+          )}
+        </button>
+        
         <h2 className="text-white text-center text-lg font-semibold mb-6">
           HTTP requests per second
         </h2>
@@ -88,7 +228,6 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
             {benchmarkData.map((item, index) => {
               const heightPercentage = (item.rps / maxRps) * 100;
               const isWinner = index === 0;
-              const isHovered = hoveredBar === item.name;
 
               return (
                 <div key={item.name} className="flex flex-col items-center flex-1 max-w-[120px]">
@@ -97,15 +236,13 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
                       {Math.round(item.rps).toLocaleString()}
                     </div>
                     <div
-                      className={`w-full rounded-t-lg transition-all duration-300 relative cursor-pointer ${
+                      className={`group w-full rounded-t-lg transition-all duration-300 relative cursor-pointer ${
                         isWinner ? 'hover:opacity-90' : 'bg-gray-600 hover:bg-gray-500'
-                      } ${isHovered ? 'opacity-100' : 'opacity-90'}`}
+                      } opacity-90`}
                       style={{ 
                         height: `${heightPercentage}%`,
                         backgroundColor: isWinner ? 'rgb(247, 164, 29)' : undefined
                       }}
-                      onMouseEnter={() => setHoveredBar(item.name)}
-                      onMouseLeave={() => setHoveredBar(null)}
                       onClick={() => window.open(item.repoUrl, '_blank', 'noopener,noreferrer')}
                     >
                       {isWinner && (
@@ -114,54 +251,52 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
                         </div>
                       )}
 
-                      {/* Tooltip */}
-                      {isHovered && (
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-gray-900 text-white text-xs rounded-lg shadow-lg p-3 z-10 pointer-events-none">
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-px">
-                            <div className="border-8 border-transparent border-b-gray-900"></div>
+                      {/* Tooltip - now with CSS :hover */}
+                      <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-gray-900 text-white text-xs rounded-lg shadow-lg p-3 z-[100] pointer-events-none">
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-px">
+                          <div className="border-8 border-transparent border-b-gray-900"></div>
+                        </div>
+                        <div 
+                          className="font-semibold text-sm mb-2 border-b border-gray-700 pb-2"
+                          style={{ color: index === 0 ? 'rgb(247, 164, 29)' : 'white' }}
+                        >
+                          {item.name} v{item.version}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Req/sec:</span>
+                            <span className="font-medium">{Math.round(item.rps).toLocaleString()}</span>
                           </div>
-                          <div 
-                            className="font-semibold text-sm mb-2 border-b border-gray-700 pb-2"
-                            style={{ color: index === 0 ? 'rgb(247, 164, 29)' : 'white' }}
-                          >
-                            {item.name} v{item.version}
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Avg latency:</span>
+                            <span className="font-medium">{(item.average * 1000).toFixed(2)} ms</span>
                           </div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Req/sec:</span>
-                              <span className="font-medium">{Math.round(item.rps).toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Avg latency:</span>
-                              <span className="font-medium">{(item.average * 1000).toFixed(2)} ms</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Fastest:</span>
-                              <span className="font-medium">{(item.fastest * 1000).toFixed(2)} ms</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Slowest:</span>
-                              <span className="font-medium">{(item.slowest * 1000).toFixed(2)} ms</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">P50:</span>
-                              <span className="font-medium">{(item.latencyP50 * 1000).toFixed(2)} ms</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">P95:</span>
-                              <span className="font-medium">{(item.latencyP95 * 1000).toFixed(2)} ms</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">P99:</span>
-                              <span className="font-medium">{(item.latencyP99 * 1000).toFixed(2)} ms</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Success rate:</span>
-                              <span className="font-medium">{(item.successRate * 100).toFixed(1)}%</span>
-                            </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Fastest:</span>
+                            <span className="font-medium">{(item.fastest * 1000).toFixed(2)} ms</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Slowest:</span>
+                            <span className="font-medium">{(item.slowest * 1000).toFixed(2)} ms</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">P50:</span>
+                            <span className="font-medium">{(item.latencyP50 * 1000).toFixed(2)} ms</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">P95:</span>
+                            <span className="font-medium">{(item.latencyP95 * 1000).toFixed(2)} ms</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">P99:</span>
+                            <span className="font-medium">{(item.latencyP99 * 1000).toFixed(2)} ms</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Success rate:</span>
+                            <span className="font-medium">{(item.successRate * 100).toFixed(1)}%</span>
                           </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                   <div className="mt-3 text-center w-full">
@@ -187,7 +322,6 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
           <div className="group relative inline-block machine-info-container">
             <div 
               className="text-center text-xs text-gray-500 hover:text-gray-400 transition-colors cursor-help px-4 py-2 rounded-lg hover:bg-gray-700/30"
-              onClick={() => setShowMachineInfo(!showMachineInfo)}
             >
               <div className="flex items-center gap-2 justify-center">
                 <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,8 +333,8 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
               </div>
             </div>
             
-            {/* Extended Details Tooltip */}
-            <div className={`${showMachineInfo ? 'visible opacity-100' : 'invisible opacity-0 md:invisible md:opacity-0'} md:group-hover:visible md:group-hover:opacity-100 transition-all duration-300 absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[calc(100vw-2rem)] max-w-96 bg-gray-900 text-white text-xs rounded-lg shadow-2xl p-4 z-20 md:pointer-events-none border border-gray-700`}>
+            {/* Extended Details Tooltip - now with CSS :hover */}
+            <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[calc(100vw-2rem)] max-w-96 bg-gray-900 text-white text-xs rounded-lg shadow-2xl p-4 z-[100] pointer-events-none border border-gray-700">
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-px">
                 <div className="border-[6px] border-transparent border-b-gray-700"></div>
               </div>
@@ -330,10 +464,13 @@ export default function BenchmarkClient({ benchmarkData, maxRps }: BenchmarkClie
           </div>
         </div>
       </div>
+      </div>
+      {/* End of container for export */}
 
+      <div className="mt-0 md:mt-2" />
 
       {/* Comparison Table */}
-      <div className="bg-gray-800 md:rounded-lg mb-0 md:mb-2">
+      <div className="bg-gray-800 md:rounded-lg mb-0 md:mb-2 relative z-0">
         <div className="overflow-x-auto md:rounded-lg">
           <table className="w-full border-collapse">
             <thead>
